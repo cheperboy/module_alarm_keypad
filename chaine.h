@@ -11,10 +11,7 @@ void chaine4Init(struct structchaine *machaine) {
 	machaine->content[0] = CHAINE_END;
 	machaine->index = 0;
 	machaine->max_len = 4;
-	Serial.print("max_len : ");
-	Serial.println(machaine->max_len);
 }
-//
 boolean chaineSet(struct structchaine *machaine, char value[], byte len) {
 	if (len > machaine->max_len) { return (false); }
 	char i = 0;
@@ -71,16 +68,6 @@ void chaineErase(struct structchaine *machaine) {
 	machaine->index = machaine->max_len;
 }
 boolean chaineCompare(struct structchaine chaine1, struct structchaine chaine2) {
-	boolean ret = true;
-	byte i = 0;
-	//max_len = min(chaine1.max_len, chaine2.max_len)
-	byte max_len = chaine1.max_len;
-	if(chaine1.max_len > chaine2.max_len) { max_len = chaine2.max_len; }
-	while ((chaine1.content[i] != CHAINE_END) && (i < max_len) && ret) {
-		if (chaine1.content[i] != chaine2.content[i]) { 
-			ret = false; 
-		}
-		i++;
-	}
-	return (ret);
+	if (strcmp(chaine1.content, chaine2.content) == 0) { return (true); }
+	else { return (false); }
 }

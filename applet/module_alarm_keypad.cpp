@@ -1,4 +1,8 @@
+#include "Arduino.h"
+void setup();
+void loop();
 #include <Keypad.h>
+#include <Password.h>
 #include <Metro.h>
 #include <SoftwareSerial.h>
 #include "chaine.h"
@@ -49,6 +53,12 @@ void setup(){
 	if (!chaineSet(&pwd_admin, (char*) pwd_admin_content, 4)) {Serial.println("echec init"); }
 	if (!chaineSet(&pwd_user, (char*) pwd_user_content, 4)) {Serial.println("echec init"); }
 	if (!chaineSet(&pwd_menu, (char*) pwd_menu_content, 4)) {Serial.println("echec init"); }
+
+	delay(2000);
+	Serial.print("chaineCompare(pwd_menu, pwd_admin) : ");
+	Serial.println(strcmp(pwd_menu.content, pwd_admin.content));
+	Serial.print("strcmp(pwd_menu, pwd_menu) : ");
+	Serial.println(strcmp(pwd_menu.content, pwd_menu.content));
 }
 
 void loop(){
@@ -95,15 +105,14 @@ void loop(){
 }
 
 void checkPwd(){
-	if (chaineCompare(pwd_buffer, pwd_user) || chaineCompare(pwd_buffer, pwd_admin)) { 
-		toggleRelay();
+	if (chaineCompare(pwd_buffer, pwd_user) == true) { 
+		toggleRelay(); 
 		gotoNormalProcess();
 	}
-	else if (chaineCompare(pwd_buffer, pwd_menu)) { 
+	else if (chaineCompare(pwd_buffer, pwd_menu) == true) { 
 		stateProgram = MODIFPWD;
 		statePwd = DEBUT;
 		clearBuffers();
-		modifyPwd('0');
 	}
 	else { 
 		Serial.println("pwd non reconnu");
@@ -131,11 +140,8 @@ void modifyPwd(char key) {
 					gotoNormalProcess();
 				}
 			}
-			else if (key == '#') { gotoNormalProcess(); }
-			else { 
-				chaineAppend(key, &pwd_buffer); 
-				chainePrint(pwd_buffer);
-			}		
+			else if (key == '#') { chaineReset(&pwd_buffer); }
+			else { chaineAppend(key, &pwd_buffer); }		
 			break; 
 		case WAIT_NEW_PWD_1:
 			switch (key) {
@@ -153,8 +159,7 @@ void modifyPwd(char key) {
 					}
 					break; 
 				default: 
-					chaineAppend(key, &pwd_buffer); 
-					chainePrint(pwd_buffer);
+					chaineAppend(key, &pwd_buffer);
 			}
 			break; 
 		case WAIT_NEW_PWD_2: 
@@ -163,10 +168,8 @@ void modifyPwd(char key) {
 					gotoNormalProcess();
 					break;
 				case '*': 
-					if (chaineCompare(pwd_buffer, pwd_buffer2)) {
+					if (chaineCompare(pwd_buffer, pwd_buffer)) {
 						Serial.println("OK");
-						chaineSet(&pwd_user, pwd_buffer.content, pwd_buffer.max_len);
-						gotoNormalProcess();
 					}
 					else {
 						Serial.println("echec");
@@ -175,7 +178,6 @@ void modifyPwd(char key) {
 					break; 
 				default: 
 					chaineAppend(key, &pwd_buffer2);
-					chainePrint(pwd_buffer2);
 			}
 			break; 
 	}
@@ -184,7 +186,6 @@ void modifyPwd(char key) {
 void gotoNormalProcess() {
 	stateProgram = NORMAL;
 	clearBuffers();
-	Serial.println("back");
 	delay(100);
 }
 
@@ -194,8 +195,5 @@ void clearBuffers() {
 }
 
 void toggleRelay() {
-	if (relayState == false) { relayState = true; }
-	else { relayState = false; }
-	Serial.print("toggleRelay to ");
-	Serial.println(relayState);
+	Serial.println("toggleRelay()");
 }
